@@ -21,36 +21,46 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-package Game::Collisions;
+package Game::Collisions::AABB;
 use v5.14;
 use warnings;
-
-use Game::Collisions::AABB;
-
-# ABSTRACT: Collision detection in 2D space
 
 
 sub new
 {
-    my ($class) = @_;
-    my $self = {};
+    my ($class, $args) = @_;
+    my $self = {
+        x => $args->{x},
+        y => $args->{y},
+        length => $args->{length},
+        height => $args->{height},
+    };
+
     bless $self => $class;
 }
 
 
-sub make_aabb
+sub does_collide
 {
-    my ($self, $args) = @_;
-    return Game::Collisions::AABB->new( $args );
+    my ($self, $other_object) = @_;
+
+    my $minx1 = $self->{x};
+    my $miny1 = $self->{y};
+    my $maxx1 = $minx1 + $self->{length};
+    my $maxy1 = $miny1 + $self->{height};
+
+    my $minx2 = $other_object->{x};
+    my $miny2 = $other_object->{y};
+    my $maxx2 = $minx2 + $other_object->{length};
+    my $maxy2 = $minx2 + $other_object->{height};
+
+    return $maxx1 >= $minx2
+        && $minx1 <= $maxx2 
+        && $maxy1 >= $miny1 
+        && $miny1 <= $maxy2;
 }
 
 
 1;
 __END__
 
-
-=head1 NAME
-
-  Game::Collisions - Collision detection
-
-=cut
