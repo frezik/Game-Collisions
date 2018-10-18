@@ -57,7 +57,7 @@ sub get_collisions
     foreach my $i (0 .. $#aabbs) {
         my $aabb = $aabbs[$i];
 
-        foreach my $other_aabb (@aabbs) {
+        foreach my $other_aabb (@aabbs[$i+1 .. $#aabbs]) {
             push @collisions, [ $aabb, $other_aabb ]
                 if $aabb->does_collide( $other_aabb );
         }
