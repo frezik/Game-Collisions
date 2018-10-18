@@ -21,58 +21,44 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-package Game::Collisions;
+use Test::More tests => 1;
+use Test::Deep;
 use v5.14;
-use warnings;
-
-use Game::Collisions::AABB;
-
-# ABSTRACT: Collision detection in 2D space
+use lib 'lib';
+use Game::Collisions;
 
 
-sub new
-{
-    my ($class) = @_;
-    my $self = {
-        aabbs => [],
-    };
-    bless $self => $class;
-}
+my $collide = Game::Collisions->new;
+my $box1 = $collide->make_aabb({
+    x => 0,
+    y => 0,
+    length => 1,
+    height => 1,
+});
+my $box2 = $collide->make_aabb({
+    x => 1,
+    y => 0,
+    length => 1,
+    height => 1,
+});
+my $box3 = $collide->make_aabb({
+    x => 3,
+    y => 0,
+    length => 1,
+    height => 1,
+});
+my $box4 = $collide->make_aabb({
+    x => 2,
+    y => 0,
+    length => 3,
+    height => 1,
+});
 
 
-sub make_aabb
-{
-    my ($self, $args) = @_;
-    my $aabb = Game::Collisions::AABB->new( $args );
-    push @{ $self->{aabbs} }, $aabb;
-    return $aabb;
-}
-
-sub get_collisions
-{
-    my ($self) = @_;
-    my @collisions;
-    my @aabbs = @{ $self->{aabbs} };
-
-    foreach my $i (0 .. $#aabbs) {
-        my $aabb = $aabbs[$i];
-
-        foreach my $other_aabb (@aabbs) {
-            push @collisions, [ $aabb, $other_aabb ]
-                if $aabb->does_collide( $other_aabb );
-        }
-    }
-
-    return @collisions;
-}
-
-
-1;
-__END__
-
-
-=head1 NAME
-
-  Game::Collisions - Collision detection
-
-=cut
+my @collisions = $collide->get_collisions;
+DEBUG: $DB::single = 1;
+cmp_deeply( \@collisions, supersetof(
+    [ $box1, $box2 ],
+    [ $box2, $box4 ],
+    [ $box3, $box4 ],
+));
