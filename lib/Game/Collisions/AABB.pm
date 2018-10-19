@@ -25,16 +25,21 @@ package Game::Collisions::AABB;
 use v5.14;
 use warnings;
 
+use constant _X => 0;
+use constant _Y => 1;
+use constant _LENGTH => 2;
+use constant _HEIGHT => 3;
+
 
 sub new
 {
     my ($class, $args) = @_;
-    my $self = {
-        x => $args->{x},
-        y => $args->{y},
-        length => $args->{length},
-        height => $args->{height},
-    };
+    my $self = [
+        $args->{x},
+        $args->{y},
+        $args->{length},
+        $args->{height},
+    ];
 
     bless $self => $class;
 }
@@ -44,15 +49,15 @@ sub does_collide
 {
     my ($self, $other_object) = @_;
 
-    my $minx1 = $self->{x};
-    my $miny1 = $self->{y};
-    my $maxx1 = $minx1 + $self->{length};
-    my $maxy1 = $miny1 + $self->{height};
+    my $minx1 = $self->[_X];
+    my $miny1 = $self->[_Y];
+    my $maxx1 = $minx1 + $self->[_LENGTH];
+    my $maxy1 = $miny1 + $self->[_HEIGHT];
 
-    my $minx2 = $other_object->{x};
-    my $miny2 = $other_object->{y};
-    my $maxx2 = $minx2 + $other_object->{length};
-    my $maxy2 = $minx2 + $other_object->{height};
+    my $minx2 = $other_object->[_X];
+    my $miny2 = $other_object->[_Y];
+    my $maxx2 = $minx2 + $other_object->[_LENGTH];
+    my $maxy2 = $minx2 + $other_object->[_HEIGHT];
 
     return $maxx1 >= $minx2
         && $minx1 <= $maxx2 
