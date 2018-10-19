@@ -1,3 +1,4 @@
+#!perl
 # Copyright (c) 2018  Timm Murray
 # All rights reserved.
 # 
@@ -21,43 +22,31 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 1;
-use Test::Deep;
 use v5.14;
-use lib 'lib';
+use warnings;
+use Time::HiRes qw( gettimeofday tv_interval );
 use Game::Collisions;
+
+use constant ITERATION_COUNT => 10;
+use constant OBJECT_COUNT => 1000;
+use constant FPS => 60;
 
 
 my $collide = Game::Collisions->new;
-my $box1 = $collide->make_aabb({
-    x => 0,
-    y => 0,
-    length => 1,
-    height => 1,
-});
-my $box2 = $collide->make_aabb({
-    x => 1,
-    y => 0,
-    length => 1,
-    height => 1,
-});
-my $box3 = $collide->make_aabb({
-    x => 3,
-    y => 0,
-    length => 1,
-    height => 1,
-});
-my $box4 = $collide->make_aabb({
-    x => 2,
-    y => 0,
-    length => 3,
-    height => 1,
-});
+$collide->make_aabb({
+    x => int rand(100),
+    y => int rand(100),
+    length => int rand(10),
+    height => int rand(10),
+}) for 1 .. OBJECT_COUNT;
 
+my $start = [gettimeofday()];
+$collide->get_collisions for 1 .. ITERATION_COUNT;
+my $elapsed = tv_interval( $start );
 
-my @collisions = $collide->get_collisions;
-cmp_deeply( \@collisions, supersetof(
-    [ $box1, $box2 ],
-    [ $box2, $box4 ],
-    [ $box3, $box4 ],
-));
+my $checks_per_sec = (ITERATION_COUNT * OBJECT_COUNT) / $elapsed;
+my $checks_per_frame = $checks_per_sec / FPS;
+say "Ran " . OBJECT_COUNT . " objects " . ITERATION_COUNT . " times"
+    . " in $elapsed sec";
+say "$checks_per_sec objects/sec";
+say "$checks_per_frame per frame @" . FPS . " fps";
