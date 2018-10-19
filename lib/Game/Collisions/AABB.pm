@@ -48,16 +48,13 @@ sub new
 sub does_collide
 {
     my ($self, $other_object) = @_;
+    my ($minx1, $miny1, $length1, $height1) = @$self;
+    my ($minx2, $miny2, $length2, $height2) = @$other_object;
 
-    my $minx1 = $self->[_X];
-    my $miny1 = $self->[_Y];
-    my $maxx1 = $minx1 + $self->[_LENGTH];
-    my $maxy1 = $miny1 + $self->[_HEIGHT];
-
-    my $minx2 = $other_object->[_X];
-    my $miny2 = $other_object->[_Y];
-    my $maxx2 = $minx2 + $other_object->[_LENGTH];
-    my $maxy2 = $minx2 + $other_object->[_HEIGHT];
+    my $maxx1 = $minx1 + $length1;
+    my $maxy1 = $miny1 + $height1;
+    my $maxx2 = $minx2 + $length2;
+    my $maxy2 = $minx2 + $height2;
 
     return $maxx1 >= $minx2
         && $minx1 <= $maxx2 
