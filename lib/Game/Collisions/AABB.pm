@@ -29,6 +29,8 @@ use constant _X => 0;
 use constant _Y => 1;
 use constant _LENGTH => 2;
 use constant _HEIGHT => 3;
+use constant _MAX_X => 4;
+use constant _MAX_Y => 5;
 
 
 sub new
@@ -39,6 +41,8 @@ sub new
         $args->{y},
         $args->{length},
         $args->{height},
+        $args->{x} + $args->{length},
+        $args->{y} + $args->{height},
     ];
 
     bless $self => $class;
@@ -48,13 +52,8 @@ sub new
 sub does_collide
 {
     my ($self, $other_object) = @_;
-    my ($minx1, $miny1, $length1, $height1) = @$self;
-    my ($minx2, $miny2, $length2, $height2) = @$other_object;
-
-    my $maxx1 = $minx1 + $length1;
-    my $maxy1 = $miny1 + $height1;
-    my $maxx2 = $minx2 + $length2;
-    my $maxy2 = $minx2 + $height2;
+    my ($minx1, $miny1, $length1, $height1, $maxx1, $maxy1) = @$self;
+    my ($minx2, $miny2, $length2, $height2, $maxx2, $maxy2) = @$other_object;
 
     return $maxx1 >= $minx2
         && $minx1 <= $maxx2 
