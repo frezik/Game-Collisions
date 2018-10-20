@@ -22,8 +22,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
 package Game::Collisions;
+
 use v5.14;
 use warnings;
+use List::Util ();
 
 use Game::Collisions::AABB;
 
@@ -34,9 +36,13 @@ sub new
 {
     my ($class) = @_;
     my $self = {
-        aabbs => [],
+        root_aabb => undef,
+        complete_aabb_list => [],
     };
     bless $self => $class;
+
+
+    return $self;
 }
 
 
@@ -44,26 +50,95 @@ sub make_aabb
 {
     my ($self, $args) = @_;
     my $aabb = Game::Collisions::AABB->new( $args );
-    push @{ $self->{aabbs} }, $aabb;
+    $self->_add_aabb( $aabb );
     return $aabb;
 }
 
 sub get_collisions
 {
     my ($self) = @_;
+    my @aabbs_to_check = @{ $self->{complete_aabb_list} };
     my @collisions;
-    my @aabbs = @{ $self->{aabbs} };
 
-    foreach my $i (0 .. $#aabbs) {
-        my $aabb = $aabbs[$i];
+    foreach my $aabb (@aabbs_to_check) {
+        push @collisions => $self->get_collisions_for_aabb( $aabb );
+    }
 
-        foreach my $other_aabb (@aabbs[$i+1 .. $#aabbs]) {
-            push @collisions, [ $aabb, $other_aabb ]
-                if $aabb->does_collide( $other_aabb );
+    return @collisions;
+}
+
+sub get_collisions_for_aabb
+{
+    my ($self, $aabb) = @_;
+    return () if ! defined $self->{root_aabb};
+    my @collisions;
+
+    my @nodes_to_check = ($self->{root_aabb});
+    while( @nodes_to_check ) {
+        my $check_node = shift @nodes_to_check;
+        my $does_collide = $aabb->does_collide( $check_node );
+
+        if(! $does_collide ) {
+            # No collision, do nothing
+        }
+        elsif( $does_collide && $check_node->is_branch_node ) {
+            # Branch node, decend further
+            push @nodes_to_check,
+                $check_node->left_node,
+                $check_node->right_node;
+        }
+        else {
+            # Leaf node, add to collisions
+            push @collisions, [ $aabb, $check_node ];
         }
     }
 
     return @collisions;
+}
+
+
+sub _add_aabb
+{
+    my ($self, $new_node) = @_;
+    if(! defined $self->{root_aabb} ) {
+        $self->{root_aabb} = $new_node;
+        push @{ $self->{complete_aabb_list} }, $new_node;
+        return;
+    }
+
+    my $best_sibling = $self->{root_aabb}->find_best_sibling_node( $new_node );
+
+    my $min_x = List::Util::min( $new_node->x, $best_sibling->x );
+    my $min_y = List::Util::min( $new_node->y, $best_sibling->y );
+
+    my $new_branch = $self->_new_meta_aabb({
+        x => $min_x,
+        y => $min_y,
+        length => 1,
+        height => 1,
+    });
+
+    my $parent = $best_sibling->parent;
+    if(! defined $parent ) {
+        # Happens when the root is going to be the new sibling. In this case, 
+        # create a new node for the root.
+        $parent = $new_branch;
+        $self->{root_aabb} = $parent;
+    }
+
+    $new_branch->set_left_node( $new_node );
+    $new_branch->set_right_node( $best_sibling );
+
+    $new_branch->resize_all_parents;
+    push @{ $self->{complete_aabb_list} }, $new_node;
+    return;
+}
+
+sub _new_meta_aabb
+{
+    my ($self, $args) = @_;
+    my $aabb = Game::Collisions::AABB->new( $args );
+    return $aabb;
 }
 
 
@@ -131,9 +206,15 @@ Creates an AABB at the specified x/y coords, in the specified dimentions.
 =head2 get_collisions
 
 Returns a list of all collisions in the system's current state. Each element 
-is an array ref containing the two objects that intersect. There are no 
-redundancies in this list. That is, if box1 intersects with box2, you will 
-I<not> get a separate entry for box2 intersecting with box1.
+is an array ref containing the two objects that intersect.
+
+=head2 get_collisions_for_aabb
+
+  get_collisions_for_aabb( $aabb )
+
+Returns a list of all collisions against the specific AABB.  Each element 
+is an array ref containing the two objects that intersect.
+
 
 =head1 LICENSE
 

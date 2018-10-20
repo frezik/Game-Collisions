@@ -21,46 +21,40 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 1;
-use Test::Deep;
+use Test::More tests => 10;
 use v5.14;
 use lib 'lib';
 use Game::Collisions;
 
 
 my $collide = Game::Collisions->new;
-my $box1 = $collide->make_aabb({
+
+$collide->make_aabb({
     x => 0,
     y => 0,
     length => 1,
     height => 1,
 });
-my $box2 = $collide->make_aabb({
+my $root = $collide->{root_aabb};
+isa_ok( $root, 'Game::Collisions::AABB', "Root node setup" );
+ok(! defined $root->left_node, "No deeper nodes setup" );
+ok(! defined $root->right_node, "No deeper nodes setup" );
+cmp_ok( $root->length, '==', 1, "Root size set" );
+cmp_ok( $root->height, '==', 1, "Root size set" );
+
+$collide->make_aabb({
     x => 1,
     y => 0,
     length => 1,
-    height => 1,
+    height => 3,
 });
-my $box3 = $collide->make_aabb({
-    x => 3,
-    y => 0,
-    length => 1,
-    height => 1,
-});
-my $box4 = $collide->make_aabb({
-    x => 2,
-    y => 0,
-    length => 3,
-    height => 1,
-});
-
-
-my @collisions = $collide->get_collisions;
+my $new_root = $collide->{root_aabb};
+cmp_ok( "$new_root", 'ne', "$root", "New root in place" );
+cmp_ok( '' . $new_root->right_node, 'eq', "$root",
+    "Old root now on right of new root" );
+cmp_ok( $new_root->left_node->x, '==', 1, "New AABB put in place on left" );
 TODO: {
-    local $TODO = 'Fetching all collisions';
-    cmp_deeply( \@collisions, supersetof(
-        [ $box1, $box2 ],
-        [ $box2, $box4 ],
-        [ $box3, $box4 ],
-    ));
+    local $TODO = 'Resize parent nodes';
+    cmp_ok( $root->length, '==', 2, "Root expanded to fill space" );
+    cmp_ok( $root->height, '==', 3, "Root exapnded to fill space" );
 }

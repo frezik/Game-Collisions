@@ -1,0 +1,3 @@
+* Handle moving AABBs
+* Rebalance tree
+    * In multiprocessor way?
