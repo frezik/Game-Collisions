@@ -92,13 +92,12 @@ sub set_parent
 sub resize_all_parents
 {
     my ($self) = @_;
-    return if ! defined $self->[_PARENT_NODE];
 
-    my @nodes_to_resize = ($self->[_PARENT_NODE]);
+    my @nodes_to_resize = ($self);
     while( @nodes_to_resize ) {
         my $next_node = shift @nodes_to_resize;
-        push @nodes_to_resize, $next_node->[_PARENT_NODE]
-            if defined $next_node->[_PARENT_NODE];
+        push @nodes_to_resize, $next_node->parent
+            if defined $next_node->parent;
         $next_node->_resize_to_fit_children;
     }
 

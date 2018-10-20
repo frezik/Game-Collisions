@@ -49,12 +49,9 @@ $collide->make_aabb({
     height => 3,
 });
 my $new_root = $collide->{root_aabb};
-cmp_ok( "$new_root", 'ne', "$root", "New root in place" );
-cmp_ok( '' . $new_root->right_node, 'eq', "$root",
+cmp_ok( $new_root, '!=', $root, "New root in place" );
+cmp_ok( $new_root->right_node, '==', $root,
     "Old root now on right of new root" );
 cmp_ok( $new_root->left_node->x, '==', 1, "New AABB put in place on left" );
-TODO: {
-    local $TODO = 'Resize parent nodes';
-    cmp_ok( $root->length, '==', 2, "Root expanded to fill space" );
-    cmp_ok( $root->height, '==', 3, "Root exapnded to fill space" );
-}
+cmp_ok( $new_root->length, '==', 2, "Root expanded to fill space" );
+cmp_ok( $new_root->height, '==', 3, "Root exapnded to fill space" );
