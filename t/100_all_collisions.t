@@ -55,12 +55,10 @@ my $box4 = $collide->make_aabb({
 });
 
 
+DEUBG: $DB::single = 1;
 my @collisions = $collide->get_collisions;
-TODO: {
-    local $TODO = 'Fetching all collisions';
-    cmp_deeply( \@collisions, supersetof(
-        [ $box1, $box2 ],
-        [ $box2, $box4 ],
-        [ $box3, $box4 ],
-    ));
-}
+cmp_deeply( \@collisions, supersetof(
+    [ $box1, $box2 ],
+    [ $box2, $box4 ],
+    [ $box3, $box4 ],
+));

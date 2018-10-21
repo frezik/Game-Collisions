@@ -118,16 +118,21 @@ sub _add_aabb
         height => 1,
     });
 
-    my $parent = $best_sibling->parent;
-    if(! defined $parent ) {
-        # Happens when the root is going to be the new sibling. In this case, 
-        # create a new node for the root.
-        $parent = $new_branch;
-        $self->{root_aabb} = $parent;
-    }
-
+    my $old_parent = $best_sibling->parent;
     $new_branch->set_left_node( $new_node );
     $new_branch->set_right_node( $best_sibling );
+
+    if(! defined $old_parent ) {
+        # Happens when the root is going to be the new sibling. In this case, 
+        # create a new node for the root.
+        $self->{root_aabb} = $new_branch;
+    }
+    else {
+        my $set_method = $best_sibling == $old_parent->left_node
+            ? "set_left_node"
+            : "set_right_node";
+        $old_parent->$set_method( $new_branch );
+    }
 
     $new_branch->resize_all_parents;
     push @{ $self->{complete_aabb_list} }, $new_node;

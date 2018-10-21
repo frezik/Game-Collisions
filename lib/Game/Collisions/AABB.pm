@@ -84,8 +84,6 @@ sub set_parent
     my ($self, $parent) = @_;
     my $current_parent = $self->[_PARENT_NODE];
     $self->[_PARENT_NODE] = $parent;
-    Scalar::Util::weaken( $self )
-        if ! Scalar::Util::isweak( $self );
     return $current_parent;
 }
 
@@ -107,6 +105,7 @@ sub resize_all_parents
 sub does_collide
 {
     my ($self, $other_object) = @_;
+    return 0 if $self == $other_object; # Does not collide with itself
     my ($minx1, $miny1, $length1, $height1, $maxx1, $maxy1) = @$self;
     my ($minx2, $miny2, $length2, $height2, $maxx2, $maxy2) = @$other_object;
 
@@ -147,7 +146,7 @@ sub find_best_sibling_node
 sub is_branch_node
 {
     my ($self) = @_;
-    return (! defined $self->[_LEFT_NODE]) && (! defined $self->[_RIGHT_NODE]);
+    return (defined $self->[_LEFT_NODE]) || (defined $self->[_RIGHT_NODE]);
 }
 
 sub dump_tree
@@ -178,6 +177,7 @@ sub _set_node
     Scalar::Util::unweaken( $self->[$index] )
         if defined $self->[$index];
     $self->[$index] = $node;
+    Scalar::Util::weaken( $self->[$index] );
     my $former_parent = $node->set_parent( $self );
     return $former_parent;
 }
@@ -194,6 +194,8 @@ sub _resize_to_fit_children
     $self->[_Y] = $y;
     $self->[_LENGTH] = $length;
     $self->[_HEIGHT] = $height;
+    $self->[_MAX_X] = $x + $length;
+    $self->[_MAX_Y] = $y + $height;
 
     return;
 }
