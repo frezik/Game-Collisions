@@ -21,7 +21,7 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 1;
+use Test::More tests => 2;
 use Test::Deep;
 use v5.14;
 use lib 'lib';
@@ -53,6 +53,11 @@ my $box4 = $collide->make_aabb({
     length => 3,
     height => 1,
 });
+
+my $orig_root = $collide->{root_aabb};
+$collide->rebalance_tree;
+cmp_ok( $collide->{root_aabb}, '!=', $orig_root,
+    "Original root replaced by rebalancing" );
 
 
 my @collisions = $collide->get_collisions;

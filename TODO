@@ -1,3 +1,8 @@
+Version 0.1
+===========
 * Handle moving AABBs
-* Rebalance tree
-    * In multiprocessor way?
+* Memory cycles
+
+Version 0.2
+===========
+* Rebalance tree in multiprocessor way?

@@ -29,7 +29,7 @@ use List::Util ();
 
 use Game::Collisions::AABB;
 
-# ABSTRACT: Collision detection in 2D space
+# ABSTRACT: Fast, pure Perl collision 2D detection
 
 
 sub new
@@ -98,6 +98,23 @@ sub get_collisions_for_aabb
     return @collisions;
 }
 
+sub rebalance_tree
+{
+    my ($self) = @_;
+    my @aabbs = @{ $self->{complete_aabb_list} };
+
+    my $new_root = $self->_new_meta_aabb({
+        x => 0,
+        y => 0,
+        length => 1,
+        height => 1,
+    });
+    $self->{root_aabb} = $new_root;
+    $self->_add_aabb( $_ ) for @aabbs;
+
+    return;
+}
+
 
 sub _add_aabb
 {
@@ -155,7 +172,7 @@ __END__
 
 =head1 NAME
 
-  Game::Collisions - Collision detection
+  Game::Collisions - Fast, pure Perl collision 2D detection
 
 =head1 SYNOPSIS
 
@@ -193,6 +210,21 @@ It's common to have the box surround (bound) the entire area of a more complex
 object. Since it's cheap to check for AABB collisions, it's useful to start 
 there, and only then use more expensive algorthims to check more accurately.
 
+=head2 Understanding the Tree
+
+This module uses a binary tree to quickly search AABB collisions. Each branch 
+of the tree must be big enough to contain all its children. When you move a 
+leaf (any actual object you want to check will be a leaf), its parents must 
+be resized to accomidate.
+
+If many leaves get moved rather far, you'll want to rebalance the tree. This is 
+expensive (which is why we normally resize rather than rebalance), so you 
+wouldn't want to do it all the time.
+
+If you would like more details, see:
+
+L<https://www.azurefromthetrenches.com/introductory-guide-to-aabb-tree-collision-detection/>
+
 =head1 METHODS
 
 =head2 new
@@ -222,6 +254,10 @@ is an array ref containing the two objects that intersect.
 Returns a list of all collisions against the specific AABB.  Each element 
 is an array ref containing the two objects that intersect.
 
+=head2 rebalance_tree
+
+Build a new tree out of the current leaves. You'll want to do this if the 
+objects are moving around a lot.
 
 =head1 LICENSE
 
