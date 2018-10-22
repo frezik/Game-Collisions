@@ -102,6 +102,7 @@ sub rebalance_tree
 {
     my ($self) = @_;
     my @aabbs = @{ $self->{complete_aabb_list} };
+    $self->{complete_aabb_list} = [];
 
     my $new_root = $self->_new_meta_aabb({
         x => 0,
