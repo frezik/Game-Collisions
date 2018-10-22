@@ -23,6 +23,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 package Game::Collisions::AABB;
 
+use utf8;
 use v5.14;
 use warnings;
 use List::Util ();
@@ -154,17 +155,20 @@ sub dump_tree
     my ($self, $spacing) = @_;
     $spacing //= '';
 
-    my $str = "$spacing\[ " . join( ', ',
+    my $draw_chars = $self->is_branch_node
+        ? '├┐'
+        : '│├';
+    my $str = "$spacing├┤ " . join( ', ',
         "$self",
         $self->x,
         $self->y,
         $self->length,
         $self->height,
-    ) . ' ]';
+    );
     $str .= "\n";
-    $str .= $self->left_node->dump_tree( $spacing . ' ' )
+    $str .= $self->left_node->dump_tree( $spacing . '┼' )
         if defined $self->left_node;
-    $str .= $self->right_node->dump_tree( $spacing . ' ' )
+    $str .= $self->right_node->dump_tree( $spacing . '┼' )
         if defined $self->right_node;
 
     return $str;
