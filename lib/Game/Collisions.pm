@@ -76,19 +76,21 @@ sub get_collisions_for_aabb
     my @nodes_to_check = ($self->{root_aabb});
     while( @nodes_to_check ) {
         my $check_node = shift @nodes_to_check;
-        my $does_collide = $aabb->does_collide( $check_node );
 
-        if(! $does_collide ) {
-            # No collision, do nothing
-        }
-        elsif( $does_collide && $check_node->is_branch_node ) {
-            # Branch node, decend further
-            push @nodes_to_check,
-                $check_node->left_node,
-                $check_node->right_node;
+        if( $check_node->is_branch_node ) {
+            my $left_node = $check_node->left_node;
+            my $right_node = $check_node->right_node;
+
+            if( $left_node->does_collide( $aabb ) ) {
+                push @nodes_to_check, $left_node;
+            }
+            elsif( $right_node->does_collide( $aabb ) ) {
+                push @nodes_to_check, $right_node;
+            }
         }
         else {
-            # Leaf node, add to collisions
+            # We already know it collided, since it wouldn't be added 
+            # to @nodes_to_check otherwise.
             push @collisions, [ $aabb, $check_node ];
         }
     }

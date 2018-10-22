@@ -29,7 +29,7 @@ use Game::Collisions;
 
 use constant FPS => 60;
 use constant ITERATION_COUNT => FPS / 3;
-use constant OBJECT_COUNT => 3000;
+use constant OBJECT_COUNT => 1000;
 
 
 my $collide = Game::Collisions->new;
