@@ -6,3 +6,4 @@ Version 0.1
 Version 0.2
 ===========
 * Rebalance tree in multiprocessor way
+* Can customize method for figuring out the "best" sibling on new insertions
