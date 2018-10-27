@@ -81,10 +81,10 @@ sub get_collisions_for_aabb
             my $left_node = $check_node->left_node;
             my $right_node = $check_node->right_node;
 
-            if( $left_node->does_collide( $aabb ) ) {
+            if( defined $left_node && $left_node->does_collide( $aabb ) ) {
                 push @nodes_to_check, $left_node;
             }
-            elsif( $right_node->does_collide( $aabb ) ) {
+            if( defined $right_node && $right_node->does_collide( $aabb ) ) {
                 push @nodes_to_check, $right_node;
             }
         }
@@ -120,41 +120,15 @@ sub rebalance_tree
 sub _add_aabb
 {
     my ($self, $new_node) = @_;
+
     if(! defined $self->{root_aabb} ) {
         $self->{root_aabb} = $new_node;
-        push @{ $self->{complete_aabb_list} }, $new_node;
-        return;
-    }
-
-    my $best_sibling = $self->{root_aabb}->find_best_sibling_node( $new_node );
-
-    my $min_x = List::Util::min( $new_node->x, $best_sibling->x );
-    my $min_y = List::Util::min( $new_node->y, $best_sibling->y );
-
-    my $new_branch = $self->_new_meta_aabb({
-        x => $min_x,
-        y => $min_y,
-        length => 1,
-        height => 1,
-    });
-
-    my $old_parent = $best_sibling->parent;
-    $new_branch->set_left_node( $new_node );
-    $new_branch->set_right_node( $best_sibling );
-
-    if(! defined $old_parent ) {
-        # Happens when the root is going to be the new sibling. In this case, 
-        # create a new node for the root.
-        $self->{root_aabb} = $new_branch;
     }
     else {
-        my $set_method = $best_sibling == $old_parent->left_node
-            ? "set_left_node"
-            : "set_right_node";
-        $old_parent->$set_method( $new_branch );
+        my $new_root = $self->{root_aabb}->insert_new_aabb( $new_node );
+        $self->{root_aabb} = $new_root if defined $new_root;
     }
 
-    $new_branch->resize_all_parents;
     push @{ $self->{complete_aabb_list} }, $new_node;
     return;
 }

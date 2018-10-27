@@ -116,6 +116,21 @@ sub does_collide
         && $miny1 <= $maxy2;
 }
 
+sub does_fully_enclose
+{
+    my ($self, $other_object) = @_;
+    return 0 if $self == $other_object; # Does not collide with itself
+    my ($minx1, $miny1, $length1, $height1, $maxx1, $maxy1) = @$self;
+    my ($minx2, $miny2, $length2, $height2, $maxx2, $maxy2) = @$other_object;
+
+    return $maxx1 >= $maxx2
+        && $minx1 <= $minx2 
+        && $maxy1 >= $maxy1 
+        && $miny1 <= $miny2;
+}
+
+
+
 sub find_best_sibling_node
 {
     my ($self, $new_node) = @_;
@@ -123,11 +138,50 @@ sub find_best_sibling_node
     my @nodes_to_check = ($self);
     while( @nodes_to_check ) {
         my $check_node = shift @nodes_to_check;
-        my $left_node = $check_node->[_LEFT_NODE];
-        my $right_node = $check_node->[_RIGHT_NODE];
-        return $check_node
-            if (! defined $left_node) || (! defined $right_node);
+        return $check_node if ! $check_node->is_branch_node;
 
+        my $left_node = $check_node->left_node;
+        my $right_node = $check_node->right_node;
+
+        if(! defined $left_node ) {
+            if(! $right_node->does_fully_enclose( $new_node ) ) {
+                # No left node, and we don't enclose the right, so 
+                # the right should be our sibling
+                return $right_node;
+            }
+            elsif( $right_node->is_branch_node ) {
+                # Since right node is a branch node, and we enclose it,
+                # descend further without doing anything else.
+                push @nodes_to_check, $right_node;
+                next;
+            }
+            else {
+                # Right node is a leaf and we enclose it, so it's our 
+                # sibling now
+                return $right_node;
+            }
+        }
+        elsif(! defined $right_node ) {
+            if(! $left_node->does_fully_enclose( $new_node ) ) {
+                # No right node, and we don't enclose the left, so 
+                # the left should be our sibling
+                return $left_node;
+            }
+            elsif( $left_node->is_branch_node ) {
+                # Since left node is a branch node, and we enclose it,
+                # descend further without doing anything else
+                push @nodes_to_check, $left_node;
+                next;
+            }
+            else {
+                # Left node is a leaf and we enclose it, so it's our 
+                # sibling now
+                return $left_node;
+            }
+        }
+
+        # If we have both left and right nodes, then we have to decide which 
+        # direction to go
         my (undef, undef, $left_length, $left_height)
             = $self->_calculate_bounding_box_for_nodes( $left_node, $new_node );
         my (undef, undef, $right_length, $right_height)
@@ -174,6 +228,112 @@ sub dump_tree
     return $str;
 }
 
+sub move
+{
+    my ($self, $args) = @_;
+    my $add_x = $args->{add_x} // 0;
+    my $add_y = $args->{add_y} // 0;
+
+    $self->[_X] = $self->[_X] + $add_x;
+    $self->[_Y] = $self->[_Y] + $add_y;
+    $self->[_MAX_X] = $self->[_MAX_X] + $add_x;
+    $self->[_MAX_Y] = $self->[_MAX_Y] + $add_y;
+
+    $self->_reinsert;
+    return;
+}
+
+sub insert_new_aabb
+{
+    my ($self, $new_node) = @_;
+    my $best_sibling = $self->find_best_sibling_node( $new_node );
+
+    my $min_x = List::Util::min( $new_node->x, $best_sibling->x );
+    my $min_y = List::Util::min( $new_node->y, $best_sibling->y );
+
+    my $new_branch = Game::Collisions::AABB->new({
+        x => $min_x,
+        y => $min_y,
+        length => 1,
+        height => 1,
+    });
+
+    my $old_parent = $best_sibling->parent;
+    $new_branch->set_left_node( $new_node );
+    $new_branch->set_right_node( $best_sibling );
+
+    my $new_root;
+    if(! defined $old_parent ) {
+        # Happens when the root is going to be the new sibling. In this case, 
+        # create a new node for the root.
+        $new_root = $new_branch;
+    }
+    else {
+        my $set_method = $best_sibling == $old_parent->left_node
+            ? "set_left_node"
+            : "set_right_node";
+        $old_parent->$set_method( $new_branch );
+    }
+
+    $new_branch->resize_all_parents;
+    return $new_root;
+}
+
+
+sub _reinsert
+{
+    my ($self) = @_;
+    my $current_parent = $self->parent;
+    $self->_detach_from_parent;
+
+    while( defined( my $possible_root = $current_parent->parent ) ) {
+        $current_parent = $possible_root;
+    }
+
+    # $current_parent will now be the root of the tree
+    $current_parent->insert_new_aabb( $self );
+    return;
+}
+
+sub _detach_from_parent
+{
+    my ($self) = @_;
+    my $current_parent = $self->parent;
+    return unless defined $current_parent;
+
+    my $current_grandparent = $current_parent->parent;
+    my $is_left = ($current_parent->left_node() == $self);
+    if(! defined $current_grandparent ) {
+        # Parent must have been root. Just detach ourselves.
+        if( $is_left ) {
+            $current_parent->set_left_node( undef );
+        }
+        else {
+            $current_parent->set_right_node( undef );
+        }
+    }
+    else {
+        # Our parent is removed, and our sibling takes its place in the 
+        # grandparent
+        my $sibling = $is_left
+            ? $current_parent->right_node
+            : $current_parent->left_node;
+        my $is_parent_left
+            = ($current_grandparent->left_node == $current_parent);
+
+        if( $is_parent_left ) {
+            $current_grandparent->set_left_node( $sibling );
+        }
+        else {
+            $current_grandparent->set_right_node( $sibling );
+        }
+    }
+    
+    $self->set_parent( undef );
+    return;
+}
+
+
 
 sub _set_node
 {
@@ -182,13 +342,16 @@ sub _set_node
         if defined $self->[$index];
     $self->[$index] = $node;
     Scalar::Util::weaken( $self->[$index] );
-    my $former_parent = $node->set_parent( $self );
+    my $former_parent = defined $node
+        ? $node->set_parent( $self )
+        : undef;
     return $former_parent;
 }
 
 sub _resize_to_fit_children
 {
     my ($self) = @_;
+    return if ! $self->is_branch_node;
     my ($x, $y, $length, $height) = $self->_calculate_bounding_box_for_nodes(
         $self->[_LEFT_NODE],
         $self->[_RIGHT_NODE],
@@ -207,6 +370,9 @@ sub _resize_to_fit_children
 sub _calculate_bounding_box_for_nodes
 {
     my ($self, $node1, $node2) = @_;
+    return @$node1[_X, _Y, _LENGTH, _HEIGHT] if ! defined $node2;
+    return @$node2[_X, _Y, _LENGTH, _HEIGHT] if ! defined $node1;
+
     my $min_x = List::Util::min( $node1->x, $node2->x );
     my $min_y = List::Util::min( $node1->y, $node2->y );
     my $max_x = List::Util::max(

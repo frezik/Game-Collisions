@@ -1,8 +1,7 @@
 Version 0.1
 ===========
-* Handle moving AABBs
-* Memory cycles
+* Rebalance tree
 
 Version 0.2
 ===========
-* Rebalance tree in multiprocessor way?
+* Rebalance tree in multiprocessor way

@@ -21,38 +21,50 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 7;
+use Test::More tests => 3;
+use Test::Deep;
 use v5.14;
 use lib 'lib';
 use Game::Collisions;
 
 
 my $collide = Game::Collisions->new;
-isa_ok( $collide, 'Game::Collisions' );
-
 my $box1 = $collide->make_aabb({
     x => 0,
     y => 0,
     length => 1,
     height => 1,
 });
-isa_ok( $box1, 'Game::Collisions::AABB' );
-
 my $box2 = $collide->make_aabb({
-    x => 2,
+    x => 1,
     y => 0,
     length => 1,
     height => 1,
 });
 my $box3 = $collide->make_aabb({
-    x => 1,
+    x => 3,
     y => 0,
-    length => 2,
+    length => 1,
+    height => 1,
+});
+my $box4 = $collide->make_aabb({
+    x => 2,
+    y => 0,
+    length => 3,
     height => 1,
 });
 
-ok(! $box1->does_collide( $box2 ), "Box1 does not collide with Box2" );
-ok( $box1->does_collide( $box3 ), "Box1 just touches box3" );
-ok( $box2->does_collide( $box3 ), "Box2 overlaps box3" );
-ok(! $box3->does_fully_enclose( $box1 ), "Box3 does not enclose box1" );
-ok( $box3->does_fully_enclose( $box2 ), "Box3 does enclose box2" );
+my @collisions = $collide->get_collisions;
+cmp_deeply( \@collisions, noneof(
+    [ $box1, $box4 ],
+), "Box1 not in collision list with box4 before moving" );
+
+
+$box1->move({
+    add_x => 1,
+});
+ok( $box1->does_collide( $box4 ), "Box1 does collide with box4 after moving" );
+@collisions = $collide->get_collisions;
+cmp_deeply( \@collisions, supersetof(
+    [ $box1, $box4 ],
+), "Box1 is in collision list with box4 after moving" );

@@ -21,38 +21,54 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 7;
+use Test::More tests => 5;
 use v5.14;
 use lib 'lib';
 use Game::Collisions;
 
 
-my $collide = Game::Collisions->new;
-isa_ok( $collide, 'Game::Collisions' );
-
-my $box1 = $collide->make_aabb({
+my $box1 = Game::Collisions::AABB->new({
     x => 0,
     y => 0,
     length => 1,
     height => 1,
 });
-isa_ok( $box1, 'Game::Collisions::AABB' );
-
-my $box2 = $collide->make_aabb({
-    x => 2,
+my $box2 = Game::Collisions::AABB->new({
+    x => 1,
     y => 0,
     length => 1,
     height => 1,
 });
-my $box3 = $collide->make_aabb({
-    x => 1,
+my $box3 = Game::Collisions::AABB->new({
+    x => 3,
     y => 0,
-    length => 2,
+    length => 1,
+    height => 1,
+});
+my $box4 = Game::Collisions::AABB->new({
+    x => 2,
+    y => 0,
+    length => 3,
+    height => 1,
+});
+my $box5 = Game::Collisions::AABB->new({
+    x => 5,
+    y => 0,
+    length => 3,
     height => 1,
 });
 
-ok(! $box1->does_collide( $box2 ), "Box1 does not collide with Box2" );
-ok( $box1->does_collide( $box3 ), "Box1 just touches box3" );
-ok( $box2->does_collide( $box3 ), "Box2 overlaps box3" );
-ok(! $box3->does_fully_enclose( $box1 ), "Box3 does not enclose box1" );
-ok( $box3->does_fully_enclose( $box2 ), "Box3 does enclose box2" );
+
+$box1->set_left_node( $box2 );
+$box1->set_right_node( $box3 );
+$box2->set_left_node( $box4 );
+$box2->set_right_node( $box5 );
+
+$box4->_detach_from_parent;
+ok(! defined $box4->parent, "Box4 no longer attached to a parent" );
+cmp_ok( $box1->left_node(), '==', $box5, "Box5 becomes new left node to box1" );
+
+$box5->_detach_from_parent;
+ok(! defined $box5->parent, "Box5 no longer attached to a parent" );
+ok(! defined $box1->left_node, "Box1 no longer has a left node" );
+ok( $box1->is_branch_node, "Box1 is still a branch node" );
