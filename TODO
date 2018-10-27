@@ -2,6 +2,7 @@ Version 0.1
 ===========
 * Rebalance tree
 * Remove nodes from tree
+* User data can be attached to nodes
 
 Version 0.2
 ===========
