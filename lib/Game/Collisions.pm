@@ -37,7 +37,7 @@ sub new
     my ($class) = @_;
     my $self = {
         root_aabb => undef,
-        complete_aabb_list => [],
+        all_aabbs => {},
     };
     bless $self => $class;
 
@@ -57,7 +57,7 @@ sub make_aabb
 sub get_collisions
 {
     my ($self) = @_;
-    my @aabbs_to_check = @{ $self->{complete_aabb_list} };
+    my @aabbs_to_check = values %{ $self->{all_aabbs} };
     my @collisions;
 
     foreach my $aabb (@aabbs_to_check) {
@@ -101,8 +101,8 @@ sub get_collisions_for_aabb
 sub rebalance_tree
 {
     my ($self) = @_;
-    my @aabbs = @{ $self->{complete_aabb_list} };
-    $self->{complete_aabb_list} = [];
+    my @aabbs = values %{ $self->{all_aabbs} };
+    $self->{all_aabbs} = {};
 
     my $new_root = $self->_new_meta_aabb({
         x => 0,
@@ -129,7 +129,7 @@ sub _add_aabb
         $self->{root_aabb} = $new_root if defined $new_root;
     }
 
-    push @{ $self->{complete_aabb_list} }, $new_node;
+    $self->{all_aabbs}{"$new_node"} = $new_node;
     return;
 }
 
