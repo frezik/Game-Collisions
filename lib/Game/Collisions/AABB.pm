@@ -39,6 +39,7 @@ use constant _MAX_Y => 5;
 use constant _PARENT_NODE => 6;
 use constant _LEFT_NODE => 7;
 use constant _RIGHT_NODE => 8;
+use constant _USER_DATA => 9;
 
 
 sub new
@@ -54,6 +55,7 @@ sub new
         undef, # parent node
         undef, # left node
         undef, # right node
+        $args->{user_data},
     ];
 
     bless $self => $class;
@@ -67,6 +69,7 @@ sub height { $_[0]->[_HEIGHT] }
 sub left_node { $_[0]->[_LEFT_NODE] }
 sub right_node { $_[0]->[_RIGHT_NODE] }
 sub parent { $_[0]->[_PARENT_NODE] }
+sub user_data { $_[0]->[_USER_DATA] }
 
 
 sub set_left_node
