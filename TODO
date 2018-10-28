@@ -1,10 +1,10 @@
 Version 0.1
 ===========
-* Rebalance tree
+* Rotate tree
 * Remove nodes from tree
 * User data can be attached to nodes
 
 Version 0.2
 ===========
-* Rebalance tree in multiprocessor way
+* Fork off a process to decide a rotation
 * Can customize method for figuring out the "best" sibling on new insertions

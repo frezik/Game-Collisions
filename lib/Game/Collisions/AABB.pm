@@ -279,6 +279,31 @@ sub insert_new_aabb
     return $new_root;
 }
 
+sub suggested_rotation
+{
+    my ($self) = @_;
+    my $left_depth = $self->left_node->_depth(0);
+    my $right_depth = $self->right_node->_depth(0);
+    my $difference = abs( $left_depth - $right_depth );
+
+    return $difference <= 1 ? 0 :
+        ($left_depth > $right_depth) ? -1 :
+        1;
+}
+
+
+sub _depth
+{
+    my ($self, $depth_so_far) = @_;
+    # TODO reimplement in iterative way
+    return $depth_so_far + 1 if ! $self->is_branch_node;
+    my $left_depth = $self->left_node->_depth( $depth_so_far + 1 );
+    my $right_depth = $self->right_node->_depth( $depth_so_far + 1 );
+
+    return $left_depth > $right_depth
+        ? $left_depth
+        : $right_depth;
+}
 
 sub _reinsert
 {
