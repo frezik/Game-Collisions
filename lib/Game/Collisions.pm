@@ -98,6 +98,15 @@ sub get_collisions_for_aabb
     return @collisions;
 }
 
+sub get_collisions_for_aabb_bruteforce
+{
+    my ($self, $aabb) = @_;
+    my @aabbs = values %{ $self->{all_aabbs} };
+
+    my @collisions = grep { $_->does_collide( $aabb ) } @aabbs;
+    return @collisions;
+}
+
 sub rebalance_tree
 {
     my ($self) = @_;

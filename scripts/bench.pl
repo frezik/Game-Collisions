@@ -6038,13 +6038,24 @@ my $OBJECT_COUNT = scalar @OBJECT_DEFINITIONS;
 my $collide = Game::Collisions->new;
 my @objects = map { $collide->make_aabb( $_ ) } @OBJECT_DEFINITIONS;
 
-my $start = [gettimeofday()];
-$collide->get_collisions_for_aabb( $objects[0] )
-    for 1 .. ITERATION_COUNT;
-my $elapsed = tv_interval( $start );
+say "Running tree-based benchmark";
+run_bench( "get_collisions_for_aabb" );
+say "";
+say "Running brute force benchmark";
+run_bench( "get_collisions_for_aabb_bruteforce" );
 
-my $checks_per_sec = (ITERATION_COUNT * $OBJECT_COUNT) / $elapsed;
-my $checks_per_frame = $checks_per_sec / FPS;
-say "Ran $OBJECT_COUNT objects " . ITERATION_COUNT . " times in $elapsed sec";
-say "$checks_per_sec objects/sec";
-say "$checks_per_frame per frame @" . FPS . " fps";
+
+sub run_bench
+{
+    my ($call) = @_;
+    my $start = [gettimeofday()];
+    $collide->$call( $objects[0] )
+        for 1 .. ITERATION_COUNT;
+    my $elapsed = tv_interval( $start );
+
+    my $checks_per_sec = (ITERATION_COUNT * $OBJECT_COUNT) / $elapsed;
+    my $checks_per_frame = $checks_per_sec / FPS;
+    say "    Ran $OBJECT_COUNT objects " . ITERATION_COUNT . " times in $elapsed sec";
+    say "    $checks_per_sec objects/sec";
+    say "    $checks_per_frame per frame @" . FPS . " fps";
+}
