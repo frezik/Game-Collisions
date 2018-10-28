@@ -28,7 +28,7 @@ use Time::HiRes qw( gettimeofday tv_interval );
 use Game::Collisions;
 
 use constant FPS => 60;
-use constant ITERATION_COUNT => FPS / 3;
+use constant ITERATION_COUNT => FPS * 100;
 
 my @OBJECT_DEFINITIONS = (
     {
@@ -6036,10 +6036,11 @@ my $OBJECT_COUNT = scalar @OBJECT_DEFINITIONS;
 
 
 my $collide = Game::Collisions->new;
-$collide->make_aabb( $_ ) for @OBJECT_DEFINITIONS;
+my @objects = map { $collide->make_aabb( $_ ) } @OBJECT_DEFINITIONS;
 
 my $start = [gettimeofday()];
-$collide->get_collisions for 1 .. ITERATION_COUNT;
+$collide->get_collisions_for_aabb( $objects[0] )
+    for 1 .. ITERATION_COUNT;
 my $elapsed = tv_interval( $start );
 
 my $checks_per_sec = (ITERATION_COUNT * $OBJECT_COUNT) / $elapsed;
