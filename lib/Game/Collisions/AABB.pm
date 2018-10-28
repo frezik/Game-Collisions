@@ -28,6 +28,7 @@ use v5.14;
 use warnings;
 use List::Util ();
 use Scalar::Util ();
+use Carp 'confess';
 
 use constant _X => 0;
 use constant _Y => 1;
@@ -291,6 +292,66 @@ sub suggested_rotation
         1;
 }
 
+sub remove
+{
+    my ($self) = @_;
+    confess "Can only remove leaf nodes" if $self->is_branch_node;
+
+    my $parent = $self->parent;
+    $self->set_parent( undef );
+    $parent->_prune;
+
+    return;
+}
+
+
+sub _prune
+{
+    my ($self) = @_;
+    return unless $self->is_branch_node;
+    my $current_left = $self->left_node;
+    my $current_right = $self->right_node;
+
+    # The main setters do things to try to keep things consistently 
+    # connected, which isn't what we want here. Access internal strucutre 
+    # directly.
+    if( (! defined $self->[_LEFT_NODE]->parent)
+        || ($self->[_LEFT_NODE]->parent != $self)
+    ){
+        $self->[_LEFT_NODE][_PARENT_NODE] = undef;
+        $self->[_LEFT_NODE] = undef;
+    }
+    if( (! defined $self->[_RIGHT_NODE]->parent)
+        || ($self->[_RIGHT_NODE]->parent != $self)
+    ){
+        $self->[_RIGHT_NODE][_PARENT_NODE] = undef;
+        $self->[_RIGHT_NODE] = undef;
+    }
+
+    # Don't need to continue if we're the root node
+    return if ! defined $self->parent;
+    if( (! defined $self->left_node) && (defined $self->right_node) ) {
+        # Have right node but no left. Attach right node to our parent.
+        if( $self->parent->right_node == $self ) {
+            $self->parent->set_right_node( $current_right );
+        }
+        else {
+            $self->parent->set_left_node( $current_right );
+        }
+    }
+    elsif( (! defined $self->right_node) && (defined $self->left_node) ) {
+        # Have left node but no right. Attach left node to our parent.
+        if( $self->parent->right_node == $self ) {
+            $self->parent->set_right_node( $current_left );
+        }
+        else {
+            $self->parent->set_left_node( $current_right );
+        }
+    }
+
+    $self->[_PARENT_NODE] = undef;
+    return;
+}
 
 sub _depth
 {
