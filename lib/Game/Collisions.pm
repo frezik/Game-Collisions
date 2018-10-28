@@ -209,6 +209,13 @@ If you would like more details, see:
 
 L<https://www.azurefromthetrenches.com/introductory-guide-to-aabb-tree-collision-detection/>
 
+=head2 Circular References
+
+This module does use circular references to keep track of parent/child 
+relationships. This would normally be a problem, but if you're using 
+C<<Game::Collisions::AABB->remove>> to take nodes out of the tree, then 
+references are cleaned up, anyway.
+
 =head1 METHODS
 
 =head2 new

@@ -482,3 +482,114 @@ sub _calculate_bounding_box_for_nodes
 1;
 __END__
 
+
+=head1 NAME
+
+  Game::Collisions::AABB
+
+=head1 METHODS
+
+=head2 new
+
+  new({
+      x => 0,
+      y => 0,
+      length => 4,
+      height => 6,
+      user_data => ...,
+  })
+
+Constructor. C<user_data> can be arbitrary data. Often, this will be the 
+more complex object associated with this AABB.
+
+=head2 Accessors
+
+Basic accessors for all the data.
+
+=head3 x
+
+=head3 y
+
+=head3 length
+
+=head3 height
+
+=head3 left_node
+
+=head3 right_node
+
+=head3 parent
+
+=head3 user_data
+
+=head2 set_left_node
+
+Pass in the AABB object that will become the left node in the tree. 
+Automatically sets the parent.
+
+=head2 set_right_node
+
+Pass in the AABB object that will become the right node in the tree. 
+Automatically sets the parent.
+
+=head2 set_parent
+
+Pass in the AABB object that will become the parent of this one. Does 
+I<not> set the left or right node on the parent.
+
+=head2 resize_all_parents
+
+Walks up the tree from this node to ensure all the parents are big enough to 
+contain their children.
+
+=head2 does_collide
+
+Pass in another AABB object. Returns true if it collides with this one.
+
+=head2 does_fully_enclose
+
+Pass in another AABB object. Returns true if this object is big enough to 
+completely enclose that object.
+
+=head2 find_best_sibling_node
+
+Pass in another AABB object that you plan to add to the tree. Searches the 
+tree from this point down to find the best sibling for that object and 
+returns it.
+
+The definition of "best" is based on the surface area of each node. Less 
+surface area is considered better as we're walking down the tree. In the 
+future, this might take a subref that provides its own definition of "best".
+
+Generally, this is only called on the root of the tree.
+
+=head2 is_branch_node
+
+Returns true if this has either a left or right node.
+
+=head2 dump_tree
+
+Returns a string that textually represents the tree. Mainly for debugging.
+
+=head2 move
+
+Moves the AABB, making sure everything is still consistent in the tree after 
+the move is done.
+
+=head2 insert_new_aabb
+
+Passed a new AABB object that we want to add to the tree. Finds the best 
+place for it (see C<find_best_sibling_node()>) and puts it there.
+
+=head2 suggested_rotation
+
+Walks the tree to see if we'd be more in balance if it were rotated. Returns 
+-1 if we should be left-rotated, 1 if we should be right-rotated, and 0 if 
+we're in balance and should stay how we are.
+
+=head2 remove
+
+Removes this AABB from the tree. As long as you use this method to remove 
+nodes, you shouldn't run into any memory leaks due to circular references.
+
+=cut
