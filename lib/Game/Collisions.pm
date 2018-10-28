@@ -224,7 +224,8 @@ Constructor.
         height => 1,
     });
 
-Creates an AABB at the specified x/y coords, in the specified dimentions.
+Creates an AABB at the specified x/y coords, in the specified dimentions, 
+and adds it to the tree.
 
 =head2 get_collisions
 
@@ -238,10 +239,31 @@ is an array ref containing the two objects that intersect.
 Returns a list of all collisions against the specific AABB.  Each element 
 is an array ref containing the two objects that intersect.
 
+=head2 get_collisions_for_aabb_bruteforce
+
+  get_colisions_for_aabb_bruteforce( $aabb );
+
+Returns a list of all collisions against the specific AABB. Each element 
+is an AABB object that collides against the passed object.
+
+This is mainly for benchmarking purposes. It's I<possible> that this method is 
+faster than the tree algorithm if the list of AABBs is small. Probably not, but
+you can try.
+
 =head2 rebalance_tree
 
 Build a new tree out of the current leaves. You'll want to do this if the 
 objects are moving around a lot.
+
+=head1 SEE ALSO
+
+=over 4
+
+=item * L<Game::Collision::AABBs>
+
+=item * L<https://www.azurefromthetrenches.com/introductory-guide-to-aabb-tree-collision-detection/> for a description of the algorithm
+
+=back
 
 =head1 LICENSE
 
