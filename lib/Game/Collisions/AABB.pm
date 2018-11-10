@@ -92,6 +92,13 @@ sub set_parent
     return $current_parent;
 }
 
+sub set_user_data
+{
+    my ($self, $data) = @_;
+    $self->[_USER_DATA] = $data;
+    return;
+}
+
 sub resize_all_parents
 {
     my ($self) = @_;
@@ -531,6 +538,10 @@ Automatically sets the parent.
 
 Pass in the AABB object that will become the right node in the tree. 
 Automatically sets the parent.
+
+=head2 set_user_data
+
+Sets the user data.
 
 =head2 set_parent
 

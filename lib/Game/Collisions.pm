@@ -266,7 +266,7 @@ objects are moving around a lot.
 
 =over 4
 
-=item * L<Game::Collision::AABBs>
+=item * L<Game::Collisions::AABB>
 
 =item * L<https://www.azurefromthetrenches.com/introductory-guide-to-aabb-tree-collision-detection/> for a description of the algorithm
 
