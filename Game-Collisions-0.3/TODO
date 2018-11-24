@@ -1,0 +1,6 @@
+Future
+======
+* Rebalance tree
+* Fork off a process to decide a rotation
+* Can customize method for figuring out the "best" sibling on new insertions
+
