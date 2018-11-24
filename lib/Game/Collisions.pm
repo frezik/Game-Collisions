@@ -125,6 +125,12 @@ sub rebalance_tree
     return;
 }
 
+sub root
+{
+    my ($self) = @_;
+    return $self->{root_aabb};
+}
+
 
 sub _add_aabb
 {

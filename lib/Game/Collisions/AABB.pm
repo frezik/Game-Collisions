@@ -150,6 +150,19 @@ sub does_fully_enclose
         && $miny1 <= $miny2;
 }
 
+sub root
+{
+    my ($self) = @_;
+    return $self if ! defined $self->parent;
+    
+    my $current_parent = $self->parent;
+    while( defined $current_parent->parent ) {
+        $current_parent = $current_parent->parent;
+    }
+
+    return $current_parent;
+}
+
 
 
 sub find_best_sibling_node
