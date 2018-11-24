@@ -21,10 +21,77 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 # POSSIBILITY OF SUCH DAMAGE.
-use Test::More tests => 3;
+package Game::Collisions::UserData;
+
 use strict;
 use warnings;
 
-use_ok( 'Game::Collisions::UserData' );
-use_ok( 'Game::Collisions::AABB' );
-use_ok( 'Game::Collisions' );
+
+sub on_aabb_move
+{
+    # Allow subclass to override
+}
+
+
+1;
+__END__
+
+
+=head1 NAME
+
+  Game::Collisions::UserData - Role for picking up movement to the AABB
+
+=head1 SYNOPSIS
+
+    package MyUserData;
+    use base 'Game::Collisions::UserData';
+
+    sub new { ... }
+
+    sub on_aabb_move
+    {
+        my ($self, $args) = @_;
+        my $add_x = $args->{add_x};
+        my $add_y = $args->{add_y};
+        ...
+    }
+
+
+    package main;
+    my $user_data = MyUserData->new;
+    my $collide = Game::Collisions->new;
+    my $box = $collide->make_aabb({
+        x => 0,
+        y => 0,
+        length => 1,
+        height => 1,
+        user_data => $user_data,
+    });
+
+    # MyUserData instance is called from here
+    $box->move({
+        add_x => 1,
+        add_y => 3,
+    });
+
+=head1 DESCRIPTION
+
+Set an instance of this to the C<user_data> on an AABB, and it will have its 
+C<on_aabb_move()> method called right after any movement.
+
+=head1 OVERRIDABLE METHODS
+
+=head2 on_aabb_move
+
+    sub on_aabb_move
+    {
+        my ($self, $args) = @_;
+        my $add_x = $args->{add_x};
+        my $add_y = $args->{add_y};
+        ...
+    }
+ 
+Is passed the C<add_x> and C<add_y> parameters that were passed when the AABB
+moved.
+
+=cut

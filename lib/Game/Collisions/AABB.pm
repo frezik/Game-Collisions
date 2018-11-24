@@ -40,11 +40,15 @@ use constant _PARENT_NODE => 6;
 use constant _LEFT_NODE => 7;
 use constant _RIGHT_NODE => 8;
 use constant _USER_DATA => 9;
+use constant _DO_CALL_USER_DATA => 10;
 
 
 sub new
 {
     my ($class, $args) = @_;
+    my $do_call_user_data = defined( $args->{user_data} )
+        && Scalar::Util::blessed( $args->{user_data} )
+        && $args->{user_data}->isa( 'Game::Collisions::UserData' );
     my $self = [
         $args->{x},
         $args->{y},
@@ -56,6 +60,7 @@ sub new
         undef, # left node
         undef, # right node
         $args->{user_data},
+        $do_call_user_data,
     ];
 
     bless $self => $class;
@@ -70,6 +75,7 @@ sub left_node { $_[0]->[_LEFT_NODE] }
 sub right_node { $_[0]->[_RIGHT_NODE] }
 sub parent { $_[0]->[_PARENT_NODE] }
 sub user_data { $_[0]->[_USER_DATA] }
+sub _do_call_user_data { $_[0]->[_DO_CALL_USER_DATA] }
 
 
 sub set_left_node
@@ -95,7 +101,11 @@ sub set_parent
 sub set_user_data
 {
     my ($self, $data) = @_;
+    my $do_call_user_data = defined( $data )
+        && Scalar::Util::blessed( $data )
+        && $data->isa( 'Game::Collisions::UserData' );
     $self->[_USER_DATA] = $data;
+    $self->[_DO_CALL_USER_DATA] = $do_call_user_data;
     return;
 }
 
@@ -250,6 +260,12 @@ sub move
     $self->[_MAX_X] = $self->[_MAX_X] + $add_x;
     $self->[_MAX_Y] = $self->[_MAX_Y] + $add_y;
 
+    if( $self->_do_call_user_data ) {
+        $self->user_data->on_aabb_move({
+            add_x => $add_x,
+            add_y => $add_y,
+        });
+    }
     $self->_reinsert;
     return;
 }
@@ -380,6 +396,7 @@ sub _reinsert
 {
     my ($self) = @_;
     my $current_parent = $self->parent;
+    return if ! defined $current_parent;
     $self->_detach_from_parent;
 
     while( defined( my $possible_root = $current_parent->parent ) ) {
@@ -508,6 +525,10 @@ __END__
 
 Constructor. C<user_data> can be arbitrary data. Often, this will be the 
 more complex object associated with this AABB.
+
+If C<user_data> inherits from L<Game::Collisions::UserData>, then it will 
+be called whenever the AABB is moved. This will happen after the AABB 
+moves, but before the rest of the tree is updated.
 
 =head2 Accessors
 
