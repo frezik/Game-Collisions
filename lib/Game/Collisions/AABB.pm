@@ -133,7 +133,7 @@ sub does_collide
 
     return $maxx1 >= $minx2
         && $minx1 <= $maxx2 
-        && $maxy1 >= $miny1 
+        && $maxy1 >= $miny2 
         && $miny1 <= $maxy2;
 }
 
