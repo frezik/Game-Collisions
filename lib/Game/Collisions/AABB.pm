@@ -338,7 +338,8 @@ sub remove
 
     my $parent = $self->parent;
     $self->set_parent( undef );
-    $parent->_prune;
+    # If there's only one node in the system, there will be no parent
+    $parent->_prune if defined $parent;
 
     return;
 }
