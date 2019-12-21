@@ -355,14 +355,22 @@ sub _prune
     # The main setters do things to try to keep things consistently 
     # connected, which isn't what we want here. Access internal strucutre 
     # directly.
-    if( (! defined $self->[_LEFT_NODE]->parent)
-        || ($self->[_LEFT_NODE]->parent != $self)
+    if( 
+        (defined $self->[_LEFT_NODE])
+        && (
+            (! defined $self->[_LEFT_NODE]->parent)
+            || ($self->[_LEFT_NODE]->parent != $self)
+        )
     ){
         $self->[_LEFT_NODE][_PARENT_NODE] = undef;
         $self->[_LEFT_NODE] = undef;
     }
-    if( (! defined $self->[_RIGHT_NODE]->parent)
-        || ($self->[_RIGHT_NODE]->parent != $self)
+    if( 
+        (defined $self->[_RIGHT_NODE])
+        && (
+            (! defined $self->[_RIGHT_NODE]->parent)
+            || ($self->[_RIGHT_NODE]->parent != $self)
+        )
     ){
         $self->[_RIGHT_NODE][_PARENT_NODE] = undef;
         $self->[_RIGHT_NODE] = undef;
